@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+function get_config() {
+    [ $# -ge 2 ] || { die 1 'syntax get_config config_path key'; }
+    which git &> /dev/null || { die 2 'git not found'; }
+    
+    config_path=$1
+    key=$2
+    
+    [ -f "${config_path}" ] || {
+        die 1 "config file ${config_path} not found"
+    }
+    git config -f "${config_path}" --get "${key}" || {
+        die 2 "key ${key} not found in ${config_path}"
+    }
+}
+

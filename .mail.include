@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+
+function sendmail() {
+	[ $# -ge 3 ] || {
+		die 1 'syntax sendmail to subject body'
+	}
+	local TO="${1}"
+	local SUBJECT="${2}"
+	local BODY="${3}"
+
+	MAIL_USER="$(get_config .secret/.config.ini mail.USER)"
+	MAIL_FROM="$(get_config .secret/.config.ini mail.FROM)"
+	MAIL_PASSWORD="$(get_config .secret/.config.ini mail.PASSWORD)"
+	MAIL_SMTP_SERVER="$(get_config .secret/.config.ini mail.SMTP-SERVER)"
+	MAIL_SMTP_PORT="$(get_config .secret/.config.ini mail.SMTP-PORT)"
+	MAIL_AUTH="$(get_config .secret/.config.ini mail.AUTH)"
+	
+	info "sendmail | MAIL_USER=${MAIL_USER}"
+	info "sendmail | MAIL_FROM=${MAIL_FROM}"
+	info "sendmail | MAIL_PASSWORD=${MAIL_PASSWORD}"
+	info "sendmail | MAIL_SMTP_SERVER=${MAIL_SMTP_SERVER}"
+	info "sendmail | MAIL_SMTP_PORT=${MAIL_SMTP_PORT}"
+	info "sendmail | MAIL_AUTH=${MAIL_AUTH}"
+	info "sendmail | TO=${TO}"
+	info "sendmail | SUBJECT=${SUBJECT}"
+	info "sendmail | BODY=${BODY}"
+
+	swaks --to "${TO}" \
+		--from "${MAIL_FROM}" \
+		--server "${MAIL_SMTP_SERVER}" \
+		--port "${MAIL_SMTP_PORT}" \
+		--auth "${MAIL_AUTH}" \
+		--auth-user "${MAIL_USER}" \
+		--auth-password "${MAIL_PASSWORD}" \
+		--tls \
+		--header "Subject: ${SUBJECT}" \
+		--body "${BODY}"
+}

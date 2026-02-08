@@ -1,10 +1,10 @@
-# !/usr/bin/env bash
+#!/usr/bin/env bash
 # ps -o args= -p "$$"
 
 # set -e
 SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
 
-for include in .logging .mail
+for include in .logging.include .config.include .mail.include
 do
 	includepath="${SCRIPTPATH}/${include}"
 	echo "INFO | checking ${includepath}"
@@ -16,33 +16,48 @@ do
 	source "${includepath}"
 done
 
+MAIL_TO="$(get_config .secret/.config.ini mail.TO)"
+# sendmail "${MAIL_TO}" "ROUTER DOWN" "router is down"
 
-exit
+MAIN_IP="$(get_config .secret/.config.ini ip-addresses.MAIN)"
+SUB_IP="$(get_config .secret/.config.ini ip-addresses.SUB)"
 
-MAIN_IP="$(cat "${SCRIPTPATH}/.secret/mainip.txt")"
-SUB_IP="$(cat "${SCRIPTPATH}/.secret/subip.txt")"
+info "main ip: ${MAIN_IP}"
+info "sub ip: ${SUB_IP}"
+
 
 DEBUG=false
 if $DEBUG
 then
 	TIME_UNIT=1
 else
-	TIME_UNIT=60
+	TIME_UNIT=$(get_config .secret/.config.ini timers.time-unit)
 fi
+info "time unit: ${TIME_UNIT}"
 
-LOOP_SLEEP=$((TIME_UNIT*30))
 
-MAIN_ERROR_SLEEP=$((TIME_UNIT*5))
+LOOP_SLEEP_VALUE=$(get_config .secret/.config.ini timers.LOOP-SLEEP-VALUE)
+LOOP_SLEEP=$((TIME_UNIT*LOOP_SLEEP_VALUE))
+
+MAIN_ERROR_SLEEP_VALUE=$(get_config .secret/.config.ini timers.MAIN-ERROR-SLEEP-VALUE)
+MAIN_ERROR_SLEEP=$((TIME_UNIT*MAIN_ERROR_SLEEP_VALUE))
 MAIN_ERROR_COUNTER=0
-MAIN_MAIL_RETRIES=3
+MAIN_MAIL_RETRIES=$(get_config .secret/.config.ini timers.MAIN-MAIL-RETRIES)
 
-SUB_ERROR_SLEEP=$((TIME_UNIT*5))
+
+SUB_ERROR_SLEEP_VALUE=$(get_config .secret/.config.ini timers.SUB-ERROR-SLEEP-VALUE)
+SUB_ERROR_SLEEP=$((TIME_UNIT*SUB_ERROR_SLEEP_VALUE))
 SUB_ERROR_COUNTER=0
-SUB_MAIL_RETRIES=3
+SUB_MAIL_RETRIES=$(get_config .secret/.config.ini timers.SUB-MAIL-RETRIES)
 
-echo ${LOOP_SLEEP}
-echo ${MAIN_ERROR_SLEEP}
-echo ${SUB_ERROR_SLEEP}
+info "LOOP_SLEEP: ${LOOP_SLEEP}"
+info "MAIN_ERROR_SLEEP: ${MAIN_ERROR_SLEEP}"
+info "MAIN_ERROR_COUNTER: ${MAIN_ERROR_COUNTER}"
+info "MAIN_MAIL_RETRIES: ${MAIN_MAIL_RETRIES}"
+info "SUB_ERROR_SLEEP: ${SUB_ERROR_SLEEP}"
+info "SUB_ERROR_COUNTER: ${SUB_ERROR_COUNTER}"
+info "SUB_MAIL_RETRIES: ${SUB_MAIL_RETRIES}"
+
 exit
 
 # main loop
@@ -88,4 +103,3 @@ do
 	info sleeping ${LOOP_SLEEP}
 	sleep ${LOOP_SLEEP}
 done
-
