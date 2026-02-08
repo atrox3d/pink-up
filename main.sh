@@ -1,11 +1,17 @@
 #!/usr/bin/env zsh
 
-RUNNING_SHELL=$(ps -o args= -p "$$"|cut -d' ' -f1)
-echo $RUNNING_SHELL
 # set -e
 
-SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
+##############################################################################
+# check shell
+##############################################################################
+RUNNING_SHELL=$(ps -o args= -p "$$"|cut -d' ' -f1)
+echo "running in shell: $[RUNNING_SHELL]"
 
+##############################################################################
+# load modules
+##############################################################################
+SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
 for include in .logging.include .config.include .mail.include
 do
 	includepath="${SCRIPTPATH}/${include}"
@@ -18,16 +24,9 @@ do
 	source "${includepath}"
 done
 
-MAIL_TO="$(get_config .secret/.config.ini mail.TO)"
-# sendmail "${MAIL_TO}" "ROUTER DOWN" "router is down"
-
-MAIN_IP="$(get_config .secret/.config.ini ip-addresses.MAIN)"
-SUB_IP="$(get_config .secret/.config.ini ip-addresses.SUB)"
-
-info "main ip: ${MAIN_IP}"
-info "sub ip: ${SUB_IP}"
-
-
+##############################################################################
+# check debug and params
+##############################################################################
 [ "${1:l}" = debug ] && DEBUG=true || DEBUG=false
 info "debug: ${DEBUG}"
 
@@ -37,8 +36,14 @@ then
 else
 	TIME_UNIT=$(get_config .secret/.config.ini timers.time-unit)
 fi
-info "time unit: ${TIME_UNIT}"
 
+
+##############################################################################
+# load config
+##############################################################################
+MAIL_TO="$(get_config .secret/.config.ini mail.TO)"
+MAIN_IP="$(get_config .secret/.config.ini ip-addresses.MAIN)"
+SUB_IP="$(get_config .secret/.config.ini ip-addresses.SUB)"
 
 LOOP_SLEEP_VALUE=$(get_config .secret/.config.ini timers.LOOP-SLEEP-VALUE)
 LOOP_SLEEP=$((TIME_UNIT*LOOP_SLEEP_VALUE))
@@ -54,28 +59,45 @@ SUB_ERROR_SLEEP=$((TIME_UNIT*SUB_ERROR_SLEEP_VALUE))
 SUB_ERROR_COUNTER=0
 SUB_MAIL_RETRIES=$(get_config .secret/.config.ini timers.SUB-MAIL-RETRIES)
 
-info "LOOP_SLEEP: ${LOOP_SLEEP}"
-info "MAIN_ERROR_SLEEP: ${MAIN_ERROR_SLEEP}"
-info "MAIN_ERROR_COUNTER: ${MAIN_ERROR_COUNTER}"
-info "MAIN_MAIL_RETRIES: ${MAIN_MAIL_RETRIES}"
-info "SUB_ERROR_SLEEP: ${SUB_ERROR_SLEEP}"
-info "SUB_ERROR_COUNTER: ${SUB_ERROR_COUNTER}"
-info "SUB_MAIL_RETRIES: ${SUB_MAIL_RETRIES}"
+##############################################################################
+# print config
+##############################################################################
+info "main ip            : ${MAIN_IP}"
+info "sub ip             : ${SUB_IP}"
+info "mail to            : ${MAIL_TO}"
+info "time unit          : ${TIME_UNIT}"
+info "LOOP_SLEEP         : ${LOOP_SLEEP}"
+info "MAIN_ERROR_SLEEP.  : ${MAIN_ERROR_SLEEP}"
+info "MAIN_ERROR_COUNTER : ${MAIN_ERROR_COUNTER}"
+info "MAIN_MAIL_RETRIES. : ${MAIN_MAIL_RETRIES}"
+info "SUB_ERROR_SLEEP.   : ${SUB_ERROR_SLEEP}"
+info "SUB_ERROR_COUNTER. : ${SUB_ERROR_COUNTER}"
+info "SUB_MAIL_RETRIES   : ${SUB_MAIL_RETRIES}"
 
-
+##############################################################################
 # main loop
+##############################################################################
 while true
 do
-	# main ip loop
+	##############################################################################
+	# main ip check
+	##############################################################################
 	info pinging main ip "${MAIN_IP}"
 	if ! ping -c5 "${MAIN_IP}" >/dev/null 2>&1
 	then
+		##############################################################################
+		# ping fail
+		##############################################################################
 		MAIN_ERROR_COUNTER=$((MAIN_ERROR_COUNTER+1))
-		error main ip error count: ${MAIN_ERROR_COUNTER}
-		#send mail
+		error "ping ${MAIN_IP} failed"
+		error "error count: ${MAIN_ERROR_COUNTER}"
 		if [ ${MAIN_ERROR_COUNTER} -ge ${MAIN_MAIL_RETRIES} ]
 		then
+			##############################################################################
+			# send mail
+			##############################################################################
 			info sending mail for main ip
+			sendmail "${MAIL_TO}" "ROUTER DOWN" "router at ${MAIN_IP} is down"
 			MAIN_ERROR_COUNTER=0
 		fi
 		info sleeping ${MAIN_ERROR_SLEEP}
