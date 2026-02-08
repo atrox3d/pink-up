@@ -1,12 +1,23 @@
 # !/usr/bin/env bash
 # ps -o args= -p "$$"
 
-set -e
+# set -e
 SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
-source "${SCRIPTPATH}/.functions" || {
-	echo "cannot load ${SCRIPTPATH}/.functions"
-	exit 1
-}
+
+for include in .logging .mail
+do
+	includepath="${SCRIPTPATH}/${include}"
+	echo "INFO | checking ${includepath}"
+	[ -f "${includepath}" ] || {
+		echo "CRITICAL | cannot load ${includepath}"
+		exit 1
+	}
+	echo "INFO | loading ${includepath}"
+	source "${includepath}"
+done
+
+
+exit
 
 MAIN_IP="$(cat "${SCRIPTPATH}/.secret/mainip.txt")"
 SUB_IP="$(cat "${SCRIPTPATH}/.secret/subip.txt")"
