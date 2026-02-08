@@ -1,7 +1,9 @@
-#!/usr/bin/env bash
-# ps -o args= -p "$$"
+#!/usr/bin/env zsh
 
+RUNNING_SHELL=$(ps -o args= -p "$$"|cut -d' ' -f1)
+echo $RUNNING_SHELL
 # set -e
+
 SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
 
 for include in .logging.include .config.include .mail.include
@@ -26,7 +28,9 @@ info "main ip: ${MAIN_IP}"
 info "sub ip: ${SUB_IP}"
 
 
-DEBUG=false
+[ "${1:l}" = debug ] && DEBUG=true || DEBUG=false
+info "debug: ${DEBUG}"
+
 if $DEBUG
 then
 	TIME_UNIT=1
@@ -58,7 +62,6 @@ info "SUB_ERROR_SLEEP: ${SUB_ERROR_SLEEP}"
 info "SUB_ERROR_COUNTER: ${SUB_ERROR_COUNTER}"
 info "SUB_MAIL_RETRIES: ${SUB_MAIL_RETRIES}"
 
-exit
 
 # main loop
 while true
