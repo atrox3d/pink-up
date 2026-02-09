@@ -44,10 +44,10 @@ function log_format_kv() {
 	
 }
 
-function infokv() {
+function log_var() {
 	# set -x
 	local _key=${1}
-	local _value=${2}
+	local _value=${(P)${_key}}
 	local _width=20
 	log_format_kv info "${_key}" "${_value}" "${_width}"
 	# set +x
@@ -58,7 +58,7 @@ function infokv() {
 # check debug and params
 ##############################################################################
 [ "${1:l}" = debug ] && DEBUG=true || DEBUG=false
-infokv 'DEBUG' ${DEBUG}
+log_var 'DEBUG' ${DEBUG}
 if $DEBUG
 then
 	TIME_UNIT=1
@@ -89,17 +89,17 @@ SUB_MAIL_RETRIES=$(get_config .secret/.config.ini timers.SUB-MAIL-RETRIES)
 ##############################################################################
 # print config
 ##############################################################################
-infokv "MAIN_IP"            "${MAIN_IP}"
-infokv "SUB_IP"             "${SUB_IP}"
-infokv "MAIL_TO"            "${MAIL_TO}"
-infokv "TIME_UNIT"          "${TIME_UNIT}"
-infokv "LOOP_SLEEP"         "${LOOP_SLEEP}"
-infokv "MAIN_ERROR_SLEEP"   "${MAIN_ERROR_SLEEP}"
-infokv "MAIN_ERROR_COUNTER" "${MAIN_ERROR_COUNTER}"
-infokv "MAIN_MAIL_RETRIES"  "${MAIN_MAIL_RETRIES}"
-infokv "SUB_ERROR_SLEEP"    "${SUB_ERROR_SLEEP}"
-infokv "SUB_ERROR_COUNTER"  "${SUB_ERROR_COUNTER}"
-infokv "SUB_MAIL_RETRIES"   "${SUB_MAIL_RETRIES}"
+log_var "MAIN_IP"
+log_var "SUB_IP"
+log_var "MAIL_TO"
+log_var "TIME_UNIT"
+log_var "LOOP_SLEEP"
+log_var "MAIN_ERROR_SLEEP"
+log_var "MAIN_ERROR_COUNTER"
+log_var "MAIN_MAIL_RETRIES"
+log_var "SUB_ERROR_SLEEP"
+log_var "SUB_ERROR_COUNTER"
+log_var "SUB_MAIL_RETRIES"
 
 ##############################################################################
 # main loop
