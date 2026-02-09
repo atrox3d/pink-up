@@ -5,7 +5,6 @@
 ##############################################################################
 # check shell: zsh
 ##############################################################################
-ps -o args= -p "$$"
 RUNNING_SHELL=$(ps -o args= -p "$$"|cut -d' ' -f1)
 [ ${RUNNING_SHELL} = zsh ] && {
 	echo "running in shell: ${RUNNING_SHELL}"
@@ -13,7 +12,6 @@ RUNNING_SHELL=$(ps -o args= -p "$$"|cut -d' ' -f1)
 	echo "ERROR | this script is made to run in zsh"
 	exit 1
 }
-
 
 ##############################################################################
 # load modules
@@ -31,34 +29,11 @@ do
 	source "${includepath}"
 done
 
-function log_format_kv() {
-	[ $# -ge 3 ] || die 1 'syntax log_format_kv logggerfn key value [key_width]'
-	local _logger=${1}
-	local _key=${2}
-	local _value=${3}
-	local _width=30
-	local _message
-	[ $# -ge 4 ] && { _width=${4}; }
-	_message=$(printf "%-${_width}s: %s" "${_key}" "${_value}")
-	$_logger "${_message}"
-	
-}
-
-function log_var() {
-	# set -x
-	local _key=${1}
-	local _value=${(P)${_key}}
-	local _width=20
-	log_format_kv info "${_key}" "${_value}" "${_width}"
-	# set +x
-}
-
-
 ##############################################################################
 # check debug and params
 ##############################################################################
 [ "${1:l}" = debug ] && DEBUG=true || DEBUG=false
-log_var 'DEBUG' ${DEBUG}
+log_var 'DEBUG'
 if $DEBUG
 then
 	TIME_UNIT=1
