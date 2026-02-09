@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 function get_config() {
     [ $# -ge 2 ] || { die 1 'syntax get_config config_path key'; }
