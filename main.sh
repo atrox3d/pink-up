@@ -67,12 +67,10 @@ LOGFILE="${SCRIPTPATH}/log.txt"
 	LOOP_SLEEP=$((TIME_UNIT*LOOP_SLEEP_VALUE))
 
 	MAIN_IP="$(get_config "${CONFIG_PATH}" ip-addresses.MAIN)"
-	$DEBUG && {
-		[ -n "${2}" ] && {
-			debug "forcing main ip to ${2}"
-			MAIN_IP="${2}"
-		}
-	}
+	if $DEBUG && [ -n "${2}" ]; then
+		debug "forcing main ip to ${2}"
+		MAIN_IP="${2}"
+	fi
 	MAIN_ERROR_SLEEP_VALUE=$(get_config "${CONFIG_PATH}" timers.MAIN-ERROR-SLEEP-VALUE)
 	MAIN_ERROR_SLEEP=$((TIME_UNIT*MAIN_ERROR_SLEEP_VALUE))
 	MAIN_ERROR_COUNTER=0
