@@ -2,12 +2,13 @@
 
 
 function sendmail() {
-	[ $# -ge 3 ] || {
-		die 1 'syntax sendmail to subject body'
+	[ $# -ge 4 ] || {
+		die 1 'syntax sendmail to cc subject body'
 	}
 	local TO="${1}"
-	local SUBJECT="${2}"
-	local BODY="${3}"
+	local CC="${2}"
+	local SUBJECT="${3}"
+	local BODY="${4}"
 
 	MAIL_USER="$(get_config .secret/.config.ini mail.USER)"
 	MAIL_FROM="$(get_config .secret/.config.ini mail.FROM)"
@@ -27,6 +28,7 @@ function sendmail() {
 	info "sendmail | BODY=${BODY}"
 
 	swaks --to "${TO}" \
+		--cc "${CC}" \
 		--from "${MAIL_FROM}" \
 		--server "${MAIL_SMTP_SERVER}" \
 		--port "${MAIL_SMTP_PORT}" \

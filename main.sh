@@ -3,10 +3,10 @@
 # set -e
 
 ##############################################################################
-# check shell: zsh
+# 1) check shell: zsh or die
 ##############################################################################
 RUNNING_SHELL=$(ps -o args= -p "$$"|cut -d' ' -f1)
-[ ${RUNNING_SHELL} = zsh ] && {
+[ "${RUNNING_SHELL}" = zsh ] && {
 	echo "running in shell: ${RUNNING_SHELL}"
 } || {
 	echo "ERROR | this script is made to run in zsh"
@@ -14,9 +14,11 @@ RUNNING_SHELL=$(ps -o args= -p "$$"|cut -d' ' -f1)
 }
 
 ##############################################################################
-# load modules
+# 2) load all modules or die
 ##############################################################################
 SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
+echo "SCRIPTPATH=${SCRIPTPATH}"
+
 for include in .logging.include .config.include .mail.include
 do
 	includepath="${SCRIPTPATH}/${include}"
@@ -30,36 +32,53 @@ do
 done
 
 ##############################################################################
-# check debug and params
+# check params: debug
 ##############################################################################
 [ "${1:l}" = debug ] && DEBUG=true || DEBUG=false
 log_var 'DEBUG'
+
+##############################################################################
+# when DEBUG is active set TIME_UNIT to 1 for testing
+##############################################################################
+CONFIG_PATH="${SCRIPTPATH}/.secret/.config.ini"
 if $DEBUG
 then
+	debug "forcing TIME_UNIT to 1"
 	TIME_UNIT=1
 else
-	TIME_UNIT=$(get_config .secret/.config.ini timers.time-unit)
+	TIME_UNIT=$(get_config "${CONFIG_PATH}" timers.time-unit)
 fi
+log_var "TIME_UNIT"
 
 ##############################################################################
 # load config from ini file
 ##############################################################################
-MAIL_TO="$(get_config .secret/.config.ini mail.TO)"
+info "CONFIG_PATH=${CONFIG_PATH}"
 
-LOOP_SLEEP_VALUE=$(get_config .secret/.config.ini timers.LOOP-SLEEP-VALUE)
+MAIL_TO="$(get_config "${CONFIG_PATH}" mail.TO)"
+MAIL_CC="$(get_config "${CONFIG_PATH}" mail.CC)"
+
+LOOP_SLEEP_VALUE=$(get_config "${CONFIG_PATH}" timers.LOOP-SLEEP-VALUE)
+info "LOOP_SLEEP_VALUE=${LOOP_SLEEP_VALUE}"
 LOOP_SLEEP=$((TIME_UNIT*LOOP_SLEEP_VALUE))
 
-MAIN_IP="$(get_config .secret/.config.ini ip-addresses.MAIN)"
-MAIN_ERROR_SLEEP_VALUE=$(get_config .secret/.config.ini timers.MAIN-ERROR-SLEEP-VALUE)
+MAIN_IP="$(get_config "${CONFIG_PATH}" ip-addresses.MAIN)"
+$DEBUG && {
+	[ -n "${2}" ] && {
+		debug "forcing main ip to ${2}"
+		MAIN_IP="${2}"
+	}
+}
+MAIN_ERROR_SLEEP_VALUE=$(get_config "${CONFIG_PATH}" timers.MAIN-ERROR-SLEEP-VALUE)
 MAIN_ERROR_SLEEP=$((TIME_UNIT*MAIN_ERROR_SLEEP_VALUE))
 MAIN_ERROR_COUNTER=0
-MAIN_MAIL_RETRIES=$(get_config .secret/.config.ini timers.MAIN-MAIL-RETRIES)
+MAIN_MAIL_RETRIES=$(get_config "${CONFIG_PATH}" timers.MAIN-MAIL-RETRIES)
 
-SUB_IP="$(get_config .secret/.config.ini ip-addresses.SUB)"
-SUB_ERROR_SLEEP_VALUE=$(get_config .secret/.config.ini timers.SUB-ERROR-SLEEP-VALUE)
+SUB_IP="$(get_config "${CONFIG_PATH}" ip-addresses.SUB)"
+SUB_ERROR_SLEEP_VALUE=$(get_config "${CONFIG_PATH}" timers.SUB-ERROR-SLEEP-VALUE)
 SUB_ERROR_SLEEP=$((TIME_UNIT*SUB_ERROR_SLEEP_VALUE))
 SUB_ERROR_COUNTER=0
-SUB_MAIL_RETRIES=$(get_config .secret/.config.ini timers.SUB-MAIL-RETRIES)
+SUB_MAIL_RETRIES=$(get_config "${CONFIG_PATH}" timers.SUB-MAIL-RETRIES)
 
 ##############################################################################
 # print config
@@ -67,7 +86,7 @@ SUB_MAIL_RETRIES=$(get_config .secret/.config.ini timers.SUB-MAIL-RETRIES)
 log_var "MAIN_IP"
 log_var "SUB_IP"
 log_var "MAIL_TO"
-log_var "TIME_UNIT"
+log_var "MAIL_CC"
 log_var "LOOP_SLEEP"
 log_var "MAIN_ERROR_SLEEP"
 log_var "MAIN_ERROR_COUNTER"
@@ -99,7 +118,7 @@ do
 			# send mail
 			##############################################################################
 			info sending mail for main ip
-			sendmail "${MAIL_TO}" "ROUTER DOWN" "router at ${MAIN_IP} is down"
+			sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER DOWN" "router at ${MAIN_IP} is down"
 			MAIN_ERROR_COUNTER=0
 		fi
 		info sleeping ${MAIN_ERROR_SLEEP}
