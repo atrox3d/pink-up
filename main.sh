@@ -3,10 +3,17 @@
 # set -e
 
 ##############################################################################
-# check shell
+# check shell: zsh
 ##############################################################################
+ps -o args= -p "$$"
 RUNNING_SHELL=$(ps -o args= -p "$$"|cut -d' ' -f1)
-echo "running in shell: $[RUNNING_SHELL]"
+[ ${RUNNING_SHELL} = zsh ] && {
+	echo "running in shell: ${RUNNING_SHELL}"
+} || {
+	echo "ERROR | this script is made to run in zsh"
+	exit 1
+}
+
 
 ##############################################################################
 # load modules
@@ -24,12 +31,34 @@ do
 	source "${includepath}"
 done
 
+function log_format_kv() {
+	[ $# -ge 3 ] || die 1 'syntax log_format_kv logggerfn key value [key_width]'
+	local _logger=${1}
+	local _key=${2}
+	local _value=${3}
+	local _width=30
+	local _message
+	[ $# -ge 4 ] && { _width=${4}; }
+	_message=$(printf "%-${_width}s: %s" "${_key}" "${_value}")
+	$_logger "${_message}"
+	
+}
+
+function infokv() {
+	# set -x
+	local _key=${1}
+	local _value=${2}
+	local _width=20
+	log_format_kv info "${_key}" "${_value}" "${_width}"
+	# set +x
+}
+
+
 ##############################################################################
 # check debug and params
 ##############################################################################
 [ "${1:l}" = debug ] && DEBUG=true || DEBUG=false
-info "debug: ${DEBUG}"
-
+infokv 'DEBUG' ${DEBUG}
 if $DEBUG
 then
 	TIME_UNIT=1
@@ -37,23 +66,21 @@ else
 	TIME_UNIT=$(get_config .secret/.config.ini timers.time-unit)
 fi
 
-
 ##############################################################################
-# load config
+# load config from ini file
 ##############################################################################
 MAIL_TO="$(get_config .secret/.config.ini mail.TO)"
-MAIN_IP="$(get_config .secret/.config.ini ip-addresses.MAIN)"
-SUB_IP="$(get_config .secret/.config.ini ip-addresses.SUB)"
 
 LOOP_SLEEP_VALUE=$(get_config .secret/.config.ini timers.LOOP-SLEEP-VALUE)
 LOOP_SLEEP=$((TIME_UNIT*LOOP_SLEEP_VALUE))
 
+MAIN_IP="$(get_config .secret/.config.ini ip-addresses.MAIN)"
 MAIN_ERROR_SLEEP_VALUE=$(get_config .secret/.config.ini timers.MAIN-ERROR-SLEEP-VALUE)
 MAIN_ERROR_SLEEP=$((TIME_UNIT*MAIN_ERROR_SLEEP_VALUE))
 MAIN_ERROR_COUNTER=0
 MAIN_MAIL_RETRIES=$(get_config .secret/.config.ini timers.MAIN-MAIL-RETRIES)
 
-
+SUB_IP="$(get_config .secret/.config.ini ip-addresses.SUB)"
 SUB_ERROR_SLEEP_VALUE=$(get_config .secret/.config.ini timers.SUB-ERROR-SLEEP-VALUE)
 SUB_ERROR_SLEEP=$((TIME_UNIT*SUB_ERROR_SLEEP_VALUE))
 SUB_ERROR_COUNTER=0
@@ -62,17 +89,17 @@ SUB_MAIL_RETRIES=$(get_config .secret/.config.ini timers.SUB-MAIL-RETRIES)
 ##############################################################################
 # print config
 ##############################################################################
-info "main ip            : ${MAIN_IP}"
-info "sub ip             : ${SUB_IP}"
-info "mail to            : ${MAIL_TO}"
-info "time unit          : ${TIME_UNIT}"
-info "LOOP_SLEEP         : ${LOOP_SLEEP}"
-info "MAIN_ERROR_SLEEP.  : ${MAIN_ERROR_SLEEP}"
-info "MAIN_ERROR_COUNTER : ${MAIN_ERROR_COUNTER}"
-info "MAIN_MAIL_RETRIES. : ${MAIN_MAIL_RETRIES}"
-info "SUB_ERROR_SLEEP.   : ${SUB_ERROR_SLEEP}"
-info "SUB_ERROR_COUNTER. : ${SUB_ERROR_COUNTER}"
-info "SUB_MAIL_RETRIES   : ${SUB_MAIL_RETRIES}"
+infokv "MAIN_IP"            "${MAIN_IP}"
+infokv "SUB_IP"             "${SUB_IP}"
+infokv "MAIL_TO"            "${MAIL_TO}"
+infokv "TIME_UNIT"          "${TIME_UNIT}"
+infokv "LOOP_SLEEP"         "${LOOP_SLEEP}"
+infokv "MAIN_ERROR_SLEEP"   "${MAIN_ERROR_SLEEP}"
+infokv "MAIN_ERROR_COUNTER" "${MAIN_ERROR_COUNTER}"
+infokv "MAIN_MAIL_RETRIES"  "${MAIN_MAIL_RETRIES}"
+infokv "SUB_ERROR_SLEEP"    "${SUB_ERROR_SLEEP}"
+infokv "SUB_ERROR_COUNTER"  "${SUB_ERROR_COUNTER}"
+infokv "SUB_MAIL_RETRIES"   "${SUB_MAIL_RETRIES}"
 
 ##############################################################################
 # main loop
