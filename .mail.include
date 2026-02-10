@@ -9,6 +9,19 @@ function sendmail() {
 	local CC="${2}"
 	local SUBJECT="${3}"
 	local BODY="${4}"
+	python mailer.py "${TO}" "${CC}" "${SUBJECT}" "${BODY}"
+}
+
+
+
+function sendmail_swaks() {
+	[ $# -ge 4 ] || {
+		die 1 'syntax sendmail to cc subject body'
+	}
+	local TO="${1}"
+	local CC="${2}"
+	local SUBJECT="${3}"
+	local BODY="${4}"
 
 	MAIL_USER="$(get_config .secret/.config.ini mail.USER)"
 	MAIL_FROM="$(get_config .secret/.config.ini mail.FROM)"
