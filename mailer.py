@@ -30,15 +30,14 @@ def get_config(config_path:str, section:str=None) -> dict:
 def send_gmail(
         recipient:str, 
         subject:str, 
-        body:str, 
-        # image_path:str=None, 
-        config:dict, 
-        # section:str=None
+        body:str,
+        config:dict,
+        cc_recipient:str=None
     ):
     '''
     sends email through gmail smtp server
     
-    :param recipient: recipient
+    :param recipient: recipient(s), comma-separated
     :type recipient: str
     :param subject: subject
     :type subject: str
@@ -46,34 +45,36 @@ def send_gmail(
     :type body: str
     :param config: config dict containing smtp config
     :type config: dict
+    :param cc_recipient: CC recipient(s), comma-separated
+    :type cc_recipient: str
     '''
     message = EmailMessage()
     message['Subject'] = subject
+    message['To'] = recipient
+    if cc_recipient:
+        message['Cc'] = cc_recipient
     message.set_content(body)
 
     # if image_path:
     #     with open(image_path, 'rb') as file:
     #         content = file.read()
     #     message.add_attachment(content, maintype='image', subtype=imghdr.what(None, content))
-    # if section:
-        # config = config[section]
     
-    # print(config)
     HOST = config.get('smtp-server')
     PORT = int(config.get('smtp-port'))
     USER = config.get('user')
     PASSWORD = config.get('password')
 
-    print(f'send_gmail: {HOST     = }')
-    print(f'send_gmail: {PORT     = }')
-    print(f'send_gmail: {USER     = }')
-    print(f'send_gmail: {PASSWORD = }')
+    # Create a list of all recipients for the SMTP server
+    all_recipients = [addr.strip() for addr in recipient.split(',') if addr.strip()]
+    if cc_recipient:
+        all_recipients.extend([addr.strip() for addr in cc_recipient.split(',') if addr.strip()])
 
     gmail = smtplib.SMTP(HOST, PORT)
     gmail.ehlo()
     gmail.starttls()
     gmail.login(USER, PASSWORD)
-    gmail.sendmail(USER, recipient, message.as_string())
+    gmail.sendmail(USER, all_recipients, message.as_string())
     gmail.quit()
 
 
@@ -81,20 +82,25 @@ if __name__ == '__main__':
     INI_PATH = Path('.secret/.config.ini')
     mail_config = get_config(INI_PATH, 'mail')
 
-    try:
-        assert len(sys.argv) == 4
-    except:
-        print(f'ERROR | syntax: {sys.argv[0]} <to> <subject> <message>')
+    # Updated argument parsing to handle optional CC
+    if len(sys.argv) == 4:
+        to, subject, message = sys.argv[1:]
+        cc = None
+    elif len(sys.argv) == 5:
+        to, cc, subject, message = sys.argv[1:]
+    else:
+        print(f'ERROR | syntax: {sys.argv[0]} <to> [<cc>] <subject> <message>')
         sys.exit(1)
 
 
-    to, subject, message = sys.argv[1:]
     print(f'send_gmail: {to      = }')
+    if cc:
+        print(f'send_gmail: {cc      = }')
     print(f'send_gmail: {subject = }')
     print(f'send_gmail: {message = }')
 
     try:
-        send_gmail(to, subject, message, mail_config)
-    except:
-        print('ERROR | failed to send email')
+        send_gmail(recipient=to, subject=subject, body=message, config=mail_config, cc_recipient=cc)
+    except Exception as e:
+        print(f'ERROR | failed to send email: {e}')
         sys.exit(1)
