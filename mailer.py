@@ -4,9 +4,19 @@ from pathlib import Path
 import smtplib
 from email.message import EmailMessage
 
-CONFIG = {}
+# global config object
 
 def get_config(config_path:str, section:str=None) -> dict:
+    '''
+    parse .ini file and returns dict
+    
+    :param config_path: path to the .ini file
+    :type config_path: str
+    :param section: section inside .ini file, if None returns all sections
+    :type section: str
+    :return: the corresponding dictionary
+    :rtype: dict
+    '''
     assert Path(config_path).exists()
 
     config = configparser.ConfigParser()
@@ -22,9 +32,21 @@ def send_gmail(
         subject:str, 
         body:str, 
         # image_path:str=None, 
-        config:dict=CONFIG, 
+        config:dict, 
         # section:str=None
     ):
+    '''
+    sends email through gmail smtp server
+    
+    :param recipient: recipient
+    :type recipient: str
+    :param subject: subject
+    :type subject: str
+    :param body: message
+    :type body: str
+    :param config: config dict containing smtp config
+    :type config: dict
+    '''
     message = EmailMessage()
     message['Subject'] = subject
     message.set_content(body)
@@ -57,13 +79,22 @@ def send_gmail(
 
 if __name__ == '__main__':
     INI_PATH = Path('.secret/.config.ini')
-    CONFIG = get_config(INI_PATH, 'mail')
+    mail_config = get_config(INI_PATH, 'mail')
 
-    assert len(sys.argv) == 4
+    try:
+        assert len(sys.argv) == 4
+    except:
+        print(f'ERROR | syntax: {sys.argv[0]} <to> <subject> <message>')
+        sys.exit(1)
+
 
     to, subject, message = sys.argv[1:]
     print(f'send_gmail: {to      = }')
     print(f'send_gmail: {subject = }')
     print(f'send_gmail: {message = }')
 
-    send_gmail(to, subject, message, CONFIG)
+    try:
+        send_gmail(to, subject, message, mail_config)
+    except:
+        print('ERROR | failed to send email')
+        sys.exit(1)
