@@ -141,8 +141,11 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	fi
 	info main ip ok
 	# MAIN_ERROR_COUNTER=0
-	info "removing ${ERRORFILE}"
-	rm ${ERRORFILE}
+	if [ $MAIN_ERROR_COUNTER -gt 0 ]
+	then
+		info "removing ${ERRORFILE}"
+		rm ${ERRORFILE}
+	fi
 
 	# ##############################################################################
 	# # sub ip check
