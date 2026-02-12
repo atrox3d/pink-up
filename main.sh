@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 
+setopt PIPE_FAIL
 # set -e
 SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
 LOGFILE="${SCRIPTPATH}/pinkup.log"
