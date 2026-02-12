@@ -9,7 +9,7 @@ function sendmail() {
 	local CC="${2}"
 	local SUBJECT="${3}"
 	local BODY="${4}"
-	python "${SCRIPT_PATH}"/mailer.py "${TO}" "${CC}" "${SUBJECT}" "${BODY}"
+	python "${SCRIPTPATH}"/mailer.py "${TO}" "${CC}" "${SUBJECT}" "${BODY}"
 }
 
 
