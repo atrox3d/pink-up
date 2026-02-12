@@ -41,7 +41,7 @@ function die() {
 	else
 		error "${2}"
 	fi
-
+	warning "exiting with exit code $1"
 	exit ${1}
 }
 
