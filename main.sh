@@ -9,6 +9,7 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	echo "SCRIPTPATH=${SCRIPTPATH}"
 	echo "LOGFILE=${LOGFILE}"
 	echo "PARAMS=${@}"
+	echo "PARAM COUNT=${#@}"
 
 	##############################################################################
 	# 1) check shell: zsh or die
