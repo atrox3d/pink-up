@@ -130,7 +130,7 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 			# send mail
 			##############################################################################
 			info sending mail for main ip
-			sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER DOWN" "router at ${MAIN_IP} is down"
+			sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER DOWN" "router at ${MAIN_IP} is DOWN"
 			# MAIN_ERROR_COUNTER=0
 			info "updating ${ERRORFILE}"
 			echo ${MAIN_ERROR_COUNTER} > "${ERRORFILE}"
