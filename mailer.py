@@ -17,7 +17,7 @@ def get_config(config_path:str, section:str=None) -> dict:
     :return: the corresponding dictionary
     :rtype: dict
     '''
-    assert Path(config_path).exists()
+    assert Path(config_path).exists(), f"config {config_path} does not exist"
 
     config = configparser.ConfigParser()
     read = config.read(config_path)
