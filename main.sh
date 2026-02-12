@@ -146,6 +146,8 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	then
 		info "removing ${ERRORFILE}"
 		rm ${ERRORFILE}
+
+		sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER UP" "router at ${MAIN_IP} is UP again"
 	fi
 
 	# ##############################################################################
