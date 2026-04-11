@@ -8,6 +8,10 @@ SUMMARY_LOGFILE="${SCRIPTPATH}/summary.log"
 ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 
 {
+	##############################################################################
+	# cannot use logger until imported
+	# using echo
+	##############################################################################
 	echo "##############################################################################"
 	echo "SCRIPTPATH=${SCRIPTPATH}"
 	echo "LOGFILE=${LOGFILE}"
@@ -31,12 +35,13 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	for include in .logging.include .config.include .mail.include
 	do
 		includepath="${SCRIPTPATH}/${include}"
-		echo "INFO | checking ${includepath}"
+		echo "INFO | checking: ${includepath}"
 		[ -f "${includepath}" ] || {
-			echo "CRITICAL | cannot load ${includepath}"
+			# update main and summary log
+			echo "CRITICAL | cannot load ${includepath}" | tee -a "${SUMMARY_LOGFILE}"
 			exit 1
 		}
-		echo "INFO | loading ${includepath}"
+		echo "INFO | loading:  ${includepath}"
 		source "${includepath}"
 	done
 
@@ -86,7 +91,7 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	fi
 
 	##############################################################################
-	# print config
+	# print config values
 	##############################################################################
 	log_var "MAIN_IP"
 	log_var "MAIL_TO"
@@ -103,26 +108,41 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 		# ping fail
 		##############################################################################
 		MAIN_ERROR_COUNTER=$((MAIN_ERROR_COUNTER+1))
-		error "ping ${MAIN_IP} failed"
-		error "error count: ${MAIN_ERROR_COUNTER}"
+
+		# update main and summary log
+		error "ping ${MAIN_IP} failed"             | tee -a "${SUMMARY_LOGFILE}"
+		error "error count: ${MAIN_ERROR_COUNTER}" | tee -a "${SUMMARY_LOGFILE}"
 
 		##############################################################################
 		# send mail
 		##############################################################################
 		info sending mail for main ip
 		sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER DOWN" "router at ${MAIN_IP} is DOWN"
+		# update summary log
+		[ $? -eq 0 ] && {
+			info "mail sent correctly"             | tee -a "${SUMMARY_LOGFILE}"
+		} || {
+			error "mail not sent"                  | tee -a "${SUMMARY_LOGFILE}"
+		}
 
 		info "updating ${ERRORFILE}"
 		echo ${MAIN_ERROR_COUNTER} > "${ERRORFILE}"
 		die 1 "error pinging main ip"
 	fi
-	info main ip ok
+	# update main and summary log
+	info main ip ok                                | tee -a "${SUMMARY_LOGFILE}"
 	if [ $MAIN_ERROR_COUNTER -gt 0 ]
 	then
 		info "removing ${ERRORFILE}"
 		rm ${ERRORFILE}
 
 		sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER UP" "router at ${MAIN_IP} is UP again"
+		# update summary log
+		[ $? -eq 0 ] && {
+			info "mail sent correctly"             | tee -a "${SUMMARY_LOGFILE}"
+		} || {
+			error "mail not sent"                  | tee -a "${SUMMARY_LOGFILE}"
+		}
 	fi
 
 } 2>&1 | tee -a "${LOGFILE}"
