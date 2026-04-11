@@ -62,6 +62,7 @@ function log_format_kv() {
 function log_var() {
 	# set -x
 	local _key=${1}
+	# weird zsh syntax to dereference variable
 	local _value=${(P)${_key}}
 	local _width=20
 	log_format_kv info "${_key}" "${_value}" "${_width}"

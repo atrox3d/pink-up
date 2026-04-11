@@ -131,8 +131,17 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	fi
 	# update main and summary log
 	info main ip ok                                | tee -a "${SUMMARY_LOGFILE}"
+
+	##############################################################################
+	# if error count > 0 last run terminated in error
+	# - remove error counter file
+	# - send mail router up again
+	##############################################################################
 	if [ $MAIN_ERROR_COUNTER -gt 0 ]
 	then
+		##############################################################################
+		# remove error counter file when solved
+		##############################################################################
 		info "removing ${ERRORFILE}"
 		rm ${ERRORFILE}
 
