@@ -4,9 +4,11 @@ setopt PIPE_FAIL
 # set -e
 SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
 LOGFILE="${SCRIPTPATH}/pinkup.log"
+SUMMARY_LOGFILE="${SCRIPTPATH}/summary.log"
 ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 
 {
+	echo "##############################################################################"
 	echo "SCRIPTPATH=${SCRIPTPATH}"
 	echo "LOGFILE=${LOGFILE}"
 	echo "PARAMS=${@}"
@@ -26,7 +28,6 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	##############################################################################
 	# 2) load all modules or die
 	##############################################################################
-
 	for include in .logging.include .config.include .mail.include
 	do
 		includepath="${SCRIPTPATH}/${include}"
@@ -46,7 +47,11 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	log_var 'DEBUG'
 
 	##############################################################################
+	#
+	# *** SPAM WARNING ***
+	#
 	# when DEBUG is active set TIME_UNIT to 1 for testing
+	#
 	##############################################################################
 	CONFIG_PATH="${SCRIPTPATH}/.secret/.config.ini"
 	if $DEBUG
@@ -66,10 +71,6 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	MAIL_TO="$(get_config "${CONFIG_PATH}" mail.TO)"
 	MAIL_CC="$(get_config "${CONFIG_PATH}" mail.CC)"
 
-	# LOOP_SLEEP_VALUE=$(get_config "${CONFIG_PATH}" timers.LOOP-SLEEP-VALUE)
-	# info "LOOP_SLEEP_VALUE=${LOOP_SLEEP_VALUE}"
-	# LOOP_SLEEP=$((TIME_UNIT*LOOP_SLEEP_VALUE))
-
 	MAIN_IP="$(get_config "${CONFIG_PATH}" ip-addresses.MAIN)"
 	if $DEBUG && [ -n "${2}" ]; then
 		debug "forcing main ip to ${2}"
@@ -83,34 +84,14 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	else
 		MAIN_ERROR_COUNTER=0
 	fi
-	# MAIN_MAIL_RETRIES=$(get_config "${CONFIG_PATH}" timers.MAIN-MAIL-RETRIES)
-
-	# SUB_IP="$(get_config "${CONFIG_PATH}" ip-addresses.SUB)"
-	# SUB_ERROR_SLEEP_VALUE=$(get_config "${CONFIG_PATH}" timers.SUB-ERROR-SLEEP-VALUE)
-	# SUB_ERROR_SLEEP=$((TIME_UNIT*SUB_ERROR_SLEEP_VALUE))
-	# SUB_ERROR_COUNTER=0
-	# SUB_MAIL_RETRIES=$(get_config "${CONFIG_PATH}" timers.SUB-MAIL-RETRIES)
 
 	##############################################################################
 	# print config
 	##############################################################################
 	log_var "MAIN_IP"
-	# log_var "SUB_IP"
 	log_var "MAIL_TO"
 	log_var "MAIL_CC"
-	# log_var "LOOP_SLEEP"
-	# log_var "MAIN_ERROR_SLEEP"
 	log_var "MAIN_ERROR_COUNTER"
-	# log_var "MAIN_MAIL_RETRIES"
-	# log_var "SUB_ERROR_SLEEP"
-	# log_var "SUB_ERROR_COUNTER"
-	# log_var "SUB_MAIL_RETRIES"
-	##############################################################################
-	# main loop
-	##############################################################################
-	# while true
-	# do
-
 
 	##############################################################################
 	# main ip check
@@ -124,24 +105,18 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 		MAIN_ERROR_COUNTER=$((MAIN_ERROR_COUNTER+1))
 		error "ping ${MAIN_IP} failed"
 		error "error count: ${MAIN_ERROR_COUNTER}"
-		# if [ ${MAIN_ERROR_COUNTER} -ge ${MAIN_MAIL_RETRIES} ]
-		# then
-			##############################################################################
-			# send mail
-			##############################################################################
-			info sending mail for main ip
-			sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER DOWN" "router at ${MAIN_IP} is DOWN"
-			# MAIN_ERROR_COUNTER=0
-			info "updating ${ERRORFILE}"
-			echo ${MAIN_ERROR_COUNTER} > "${ERRORFILE}"
-			die 1 "error pinging main ip"
-		# fi
-		# info sleeping ${MAIN_ERROR_SLEEP}
-		# sleep ${MAIN_ERROR_SLEEP}
-		# continue
+
+		##############################################################################
+		# send mail
+		##############################################################################
+		info sending mail for main ip
+		sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER DOWN" "router at ${MAIN_IP} is DOWN"
+
+		info "updating ${ERRORFILE}"
+		echo ${MAIN_ERROR_COUNTER} > "${ERRORFILE}"
+		die 1 "error pinging main ip"
 	fi
 	info main ip ok
-	# MAIN_ERROR_COUNTER=0
 	if [ $MAIN_ERROR_COUNTER -gt 0 ]
 	then
 		info "removing ${ERRORFILE}"
@@ -150,35 +125,4 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 		sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER UP" "router at ${MAIN_IP} is UP again"
 	fi
 
-	# ##############################################################################
-	# # sub ip check
-	# ##############################################################################
-	# info "pinging sub ip ${SUB_IP}"
-	# if ! ping -c5 "${SUB_IP}" >/dev/null 2>&1
-	# then
-	# 	##############################################################################
-	# 	# ping fail
-	# 	##############################################################################
-	# 	SUB_ERROR_COUNTER=$((SUB_ERROR_COUNTER+1))
-	# 	error "ping ${SUB_IP} failed"
-	# 	error "error count: ${SUB_ERROR_COUNTER}"
-	# 	if [ ${SUB_ERROR_COUNTER} -ge ${SUB_MAIL_RETRIES} ]
-	# 	then
-	# 		##############################################################################
-	# 		# send mail
-	# 		##############################################################################
-	# 		info "sending mail for sub ip"
-	# 		sendmail "${MAIL_TO}" "${MAIL_CC}" "SUB LINK DOWN" "link at ${SUB_IP} is down"
-	# 		SUB_ERROR_COUNTER=0
-	# 	fi
-	# 	info "sleeping ${SUB_ERROR_SLEEP}"
-	# 	sleep ${SUB_ERROR_SLEEP}
-	# 	continue
-	# fi
-	# info "sub ip ok"
-	# SUB_ERROR_COUNTER=0
-
-	# info sleeping ${LOOP_SLEEP}
-	# sleep ${LOOP_SLEEP}
-	# done
 } 2>&1 | tee -a "${LOGFILE}"
