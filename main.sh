@@ -18,6 +18,28 @@ SUMMARY_LOGFILE="${SCRIPTPATH}/summary.log"
 CRONWRAPPER_LOGFILE="${SCRIPTPATH}/cron-wrapper.log"
 ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 
+
+function mail_ok() {
+	sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER UP" "router at ${MAIN_IP} is UP again"
+	# update summary log
+	[ $? -eq 0 ] && {
+		info "mail sent correctly"             | tee -a "${SUMMARY_LOGFILE}"
+	} || {
+		error "mail not sent"                  | tee -a "${SUMMARY_LOGFILE}"
+	}
+}
+
+function mail_ko() {
+	sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER DOWN" "router at ${MAIN_IP} is DOWN"
+	# update summary log
+	[ $? -eq 0 ] && {
+		info "mail sent correctly"             | tee -a "${SUMMARY_LOGFILE}"
+	} || {
+		error "mail not sent"                  | tee -a "${SUMMARY_LOGFILE}"
+	}
+}
+
+
 {
 	##############################################################################
 	# cannot use logger until imported
@@ -114,7 +136,11 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	log_var "ERRORFILE"
 
 	##############################################################################
+	#
+	#
 	# main ip check
+	#
+	#
 	##############################################################################
 	info pinging main ip "${MAIN_IP}"
 	if ! ping -c5 "${MAIN_IP}" >/dev/null 2>&1
@@ -131,14 +157,8 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 		##############################################################################
 		# send mail
 		##############################################################################
-		info sending mail for main ip
-		sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER DOWN" "router at ${MAIN_IP} is DOWN"
-		# update summary log
-		[ $? -eq 0 ] && {
-			info "mail sent correctly"             | tee -a "${SUMMARY_LOGFILE}"
-		} || {
-			error "mail not sent"                  | tee -a "${SUMMARY_LOGFILE}"
-		}
+		info "sending mail for main ip"
+		mail_ko
 
 		info "updating ${ERRORFILE}"
 		echo ${MAIN_ERROR_COUNTER} > "${ERRORFILE}"
@@ -160,13 +180,7 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 		info "removing ${ERRORFILE}"
 		rm ${ERRORFILE}
 
-		sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER UP" "router at ${MAIN_IP} is UP again"
-		# update summary log
-		[ $? -eq 0 ] && {
-			info "mail sent correctly"             | tee -a "${SUMMARY_LOGFILE}"
-		} || {
-			error "mail not sent"                  | tee -a "${SUMMARY_LOGFILE}"
-		}
+		mail_ok
 	fi
 
 } 2>&1 | tee -a "${LOGFILE}"
