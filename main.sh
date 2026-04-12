@@ -146,7 +146,9 @@ function mail_ko() {
 	if ! ping -c5 "${MAIN_IP}" >/dev/null 2>&1
 	then
 		##############################################################################
+		#
 		# ping fail
+		#
 		##############################################################################
 		MAIN_ERROR_COUNTER=$((MAIN_ERROR_COUNTER+1))
 
@@ -160,27 +162,37 @@ function mail_ko() {
 		info "sending mail for main ip"
 		mail_ko
 
+		##############################################################################
+		# update error counter file
+		##############################################################################
 		info "updating ${ERRORFILE}"
 		echo ${MAIN_ERROR_COUNTER} > "${ERRORFILE}"
+
 		die 1 "error pinging main ip"
-	fi
-	# update main and summary log
-	info "main ip ${MAIN_IP} ok"                   | tee -a "${SUMMARY_LOGFILE}"
-
-	##############################################################################
-	# if error count > 0 last run terminated in error
-	# - remove error counter file
-	# - send mail router up again
-	##############################################################################
-	if [ $MAIN_ERROR_COUNTER -gt 0 ]
-	then
+	else
 		##############################################################################
-		# remove error counter file when solved
+		#
+		# ping success
+		#
 		##############################################################################
-		info "removing ${ERRORFILE}"
-		rm ${ERRORFILE}
+		# update main and summary log
+		info "main ip ${MAIN_IP} ok"                   | tee -a "${SUMMARY_LOGFILE}"
 
-		mail_ok
+		##############################################################################
+		# if this run is ok and error count > 0 last run terminated in error
+		# - remove error counter file
+		# - send mail router up again (just once)
+		##############################################################################
+		if [ $MAIN_ERROR_COUNTER -gt 0 ]
+		then
+			##############################################################################
+			# remove error counter file when solved
+			##############################################################################
+			info "removing ${ERRORFILE}"
+			rm ${ERRORFILE}
+
+			mail_ok
+		fi
 	fi
 
 } 2>&1 | tee -a "${LOGFILE}"
