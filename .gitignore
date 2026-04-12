@@ -1,3 +1,4 @@
 .secret/
 *.log
 ping-errors.txt
+cron-wrapper.*

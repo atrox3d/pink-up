@@ -2,6 +2,7 @@
 
 ##############################################################################
 # TODO: check pc connection before checking remote router
+# TODO: add logfiles checklist
 ##############################################################################
 
 
@@ -14,6 +15,7 @@ setopt PIPE_FAIL
 SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
 LOGFILE="${SCRIPTPATH}/pinkup.log"
 SUMMARY_LOGFILE="${SCRIPTPATH}/summary.log"
+CRONWRAPPER_LOGFILE="${SCRIPTPATH}/cron-wrapper.log"
 ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 
 {
@@ -139,7 +141,7 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 		die 1 "error pinging main ip"
 	fi
 	# update main and summary log
-	info main ip ok                                | tee -a "${SUMMARY_LOGFILE}"
+	info "main ip ${MAIN_IP} ok"                   | tee -a "${SUMMARY_LOGFILE}"
 
 	##############################################################################
 	# if error count > 0 last run terminated in error
