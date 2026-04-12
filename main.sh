@@ -108,7 +108,9 @@ function mail_ko() {
 
 	MAIL_TO="$(get_config "${CONFIG_PATH}" mail.TO)"
 	MAIL_CC="$(get_config "${CONFIG_PATH}" mail.CC)"
-
+	
+	SMTP_SERVER="$(get_config "${CONFIG_PATH}" mail.SMTP-SERVER)"
+	
 	MAIN_IP="$(get_config "${CONFIG_PATH}" ip-addresses.MAIN)"
 	if $DEBUG && [ -n "${2}" ]; then
 		debug "forcing main ip to ${2}"
@@ -126,6 +128,7 @@ function mail_ko() {
 	##############################################################################
 	# print config and vars values
 	##############################################################################
+	log_var "SMTP_SERVER"
 	log_var "MAIN_IP"
 	log_var "MAIL_TO"
 	log_var "MAIL_CC"
@@ -135,6 +138,24 @@ function mail_ko() {
 	log_var "CRONWRAPPER_LOGFILE"
 	log_var "ERRORFILE"
 
+	##############################################################################
+	#
+	# PRE-FLIGHT CONNECTIVITY CHECK
+	#
+	##############################################################################	
+	for host_to_check in "google.com" "${SMTP_SERVER}"
+	do
+		info "PRE-CHECK: pinging main ip ${host_to_check}"
+		if ! ping -c5 "${host_to_check}" >/dev/null 2>&1
+		then
+			error "cannot ping ${host_to_check}"  | tee -a "${SUMMARY_LOGFILE}"
+			die 1 "exiting, cannot check pre-flight connectivity"
+		fi
+		else
+			info "PRE-CHECK OK: ${host_to_check}" | tee -a "${SUMMARY_LOGFILE}"
+		fi
+	done
+	
 	##############################################################################
 	#
 	#
