@@ -104,7 +104,8 @@ function mail_ko() {
 	##############################################################################
 	# load config from ini file
 	##############################################################################
-	info "CONFIG_PATH=${CONFIG_PATH}"
+	# info "CONFIG_PATH=${CONFIG_PATH}"
+	log_var "CONFIG_PATH"
 
 	MAIL_TO="$(get_config "${CONFIG_PATH}" mail.TO)"
 	MAIL_CC="$(get_config "${CONFIG_PATH}" mail.CC)"
