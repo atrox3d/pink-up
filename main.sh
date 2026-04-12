@@ -108,6 +108,10 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 	log_var "MAIL_TO"
 	log_var "MAIL_CC"
 	log_var "MAIN_ERROR_COUNTER"
+	log_var "LOGFILE"
+	log_var "SUMMARY_LOGFILE"
+	log_var "CRONWRAPPER_LOGFILE"
+	log_var "ERRORFILE"
 
 	##############################################################################
 	# main ip check
