@@ -21,7 +21,7 @@ ERRORFILE="${SCRIPTPATH}/ping-errors.txt"
 
 function mail_ok() {
 	sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER UP" "router at ${MAIN_IP} is UP again"
-	# update summary log
+	# update main and summary log
 	[ $? -eq 0 ] && {
 		info "mail sent correctly"             | tee -a "${SUMMARY_LOGFILE}"
 	} || {
@@ -31,7 +31,7 @@ function mail_ok() {
 
 function mail_ko() {
 	sendmail "${MAIL_TO}" "${MAIL_CC}" "ROUTER DOWN" "router at ${MAIN_IP} is DOWN"
-	# update summary log
+	# update main and summary log
 	[ $? -eq 0 ] && {
 		info "mail sent correctly"             | tee -a "${SUMMARY_LOGFILE}"
 	} || {
@@ -124,7 +124,7 @@ function mail_ko() {
 	fi
 
 	##############################################################################
-	# print config values
+	# print config and vars values
 	##############################################################################
 	log_var "MAIN_IP"
 	log_var "MAIL_TO"
