@@ -11,7 +11,7 @@
 # MAIN SCRIPT VARS
 ##############################################################################
 setopt PIPE_FAIL
-# set -e
+set -e
 SCRIPTPATH="$(cd "$(dirname "$0")";pwd -P)"
 LOGFILE="${SCRIPTPATH}/pinkup.log"
 SUMMARY_LOGFILE="${SCRIPTPATH}/summary.log"
@@ -150,7 +150,6 @@ function mail_ko() {
 		then
 			error "cannot ping ${host_to_check}"  | tee -a "${SUMMARY_LOGFILE}"
 			die 1 "exiting, cannot check pre-flight connectivity"
-		fi
 		else
 			info "PRE-CHECK OK: ${host_to_check}" | tee -a "${SUMMARY_LOGFILE}"
 		fi
